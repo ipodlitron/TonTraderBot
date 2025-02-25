@@ -79,14 +79,14 @@ Run the bot:
 ## **Project Structure**
 
 TonTraderBot/
-├── main.py           # Entry point of the bot
-├── config.py         # Configuration and environment variables
-├── handlers.py       # Telegram bot command handlers and FSM flows
-├── ton_client.py     # Wallet generation and blockchain transaction functions
-├── db.py             # Database module for wallet storage
-├── .env              # Environment variables (not committed)
-├── requirements.txt  # Python dependencies
-└── README.md         # This file
+├── main.py
+├── config.py
+├── handlers.py
+├── ton_client.py
+├── db.py
+├── .env
+├── requirements.txt
+└── README.md
 
 ## Contributing
 
