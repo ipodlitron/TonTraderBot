@@ -79,14 +79,23 @@ Run the bot:
 ## **Project Structure**
 
 TonTraderBot/
+
 ├── main.py
+
 ├── config.py
+
 ├── handlers.py
+
 ├── ton_client.py
+
 ├── db.py
+
 ├── .env
+
 ├── requirements.txt
+
 └── README.md
+
 
 ## Contributing
 
