@@ -7,8 +7,7 @@ load_dotenv()
 
 ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY')
 if not ENCRYPTION_KEY:
-    ENCRYPTION_KEY = "4VqT3Qa2gZ-YJBgoQFYeMfXkV5l36GUxHDqqu8PF3Mc="
-# Fernet.generate_key().decode()
+    ENCRYPTION_KEY = Fernet.generate_key().decode()
     print("WARNING: ENCRYPTION_KEY not set in .env, using generated key:", ENCRYPTION_KEY)
 
 fernet = Fernet(ENCRYPTION_KEY.encode())
