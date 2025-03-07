@@ -85,13 +85,7 @@ async def create_wallet_callback(update: Update, context: ContextTypes.DEFAULT_T
         # Шифруем мнемонику (mnemonic – список слов)
         encrypted_mnemonic = encrypt_text(mnemonic)
         add_wallet(query.from_user.id, wallet_address, encrypted_mnemonic)
-#        try:
-#            tx_hash, deployed_address = await deploy_wallet(mnemonic)
-#            logger.info("Кошелек деплоен: %s, tx: %s", deployed_address, tx_hash)
-#        except Exception as e:
-#            logger.error("Ошибка при деплое кошелька: %s", e)
-#            await query.message.reply_text("Ошибка при деплое кошелька. Попробуйте позже.")
-#            return
+
         text = ("Ваш кошелек создан и готов к работе, экспортируйте мнемоническую фразу и храните её в надежном месте!\nЭкспортировать?")
         keyboard = [[InlineKeyboardButton("Да", callback_data="export_mnemonic_yes"),
                      InlineKeyboardButton("Нет", callback_data="export_mnemonic_no")]]
@@ -140,47 +134,6 @@ async def wallet_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     wallet_address = wallet_data[0]
     await update.message.reply_text(f"Адрес вашего кошелька: {wallet_address}") #, reply_markup=get_main_menu_keyboard())
-
-#async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#    user_id = update.effective_user.id
-#    wallet_data = get_wallet_by_user(user_id)
-#    if not wallet_data:
-#        await update.message.reply_text("Сначала создайте кошелек командой /start.")
-#        return
-#    await update.message.reply_text("Получение балансов, пожалуйста, подождите...")
-#    tokens = await get_all_user_tokens(user_id)
-#    if tokens is None:
-#        await update.message.reply_text("Ошибка получения балансов.")
-#        return
-#    response_lines = ["Токен | Количество | Стоимость актива (USDT)"]
-#    for symbol, token in tokens.items():
-#        amount = token["amount"]
-#        price = token["price"]
-#        value = amount * price if price is not None else 0
-#        response_lines.append(f"{symbol} | {amount:.4f} | {value:.2f}")
-#    response_text = "\n".join(response_lines)
-#    await update.message.reply_text(response_text, reply_markup=get_main_menu_keyboard())
-
-#async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#    user_id = update.effective_user.id
-#    wallet_data = get_wallet_by_user(user_id)
-#    if not wallet_data:
-#        await update.message.reply_text("Сначала создайте кошелек командой /start.")
-#        return
-#    await update.message.reply_text("Получение балансов, пожалуйста, подождите...")
-#    tokens = await get_all_user_tokens(user_id)
-#    if not tokens:
-#        await update.message.reply_text("Ошибка получения балансов.")
-#        return
-#    response_lines = ["Токен | Количество | Стоимость актива (USDT)"]
-#    for symbol, token in tokens.items():
-#        # token = [balance, name, contract, price]
-#        amount = token[0]
-#        price = token[3]
-#        value = amount * price if price is not None else 0
-#        response_lines.append(f"{symbol} | {amount:.4f} | {value:.2f}")
-#    response_text = "\n".join(response_lines)
-#    await update.message.reply_text(response_text)
 
 async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -299,27 +252,6 @@ async def add_token_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Добавление токена отменено.", reply_markup=get_main_menu_keyboard())
     return ConversationHandler.END
 
-# --- Команда /send (ConversationHandler) ---
-#async def send_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#    user_id = update.effective_user.id
-#    tokens = await get_all_user_tokens(user_id)
-#    if tokens is None:
-#        await update.message.reply_text("Ошибка получения данных кошелька.")
-#        return ConversationHandler.END
-#    available_tokens = {sym: token for sym, token in tokens.items() if token["amount"] > 0}
-#    if not available_tokens:
-#        await update.message.reply_text("Баланс всех токенов вашего кошелька = 0, вначале пополните кошелек")
-#        return ConversationHandler.END
-#    context.user_data["available_tokens"] = available_tokens
-#    keyboard = []
-#    for sym, token in available_tokens.items():
-#        button_text = f"{sym} ({token['name']})"
-#        keyboard.append([InlineKeyboardButton(button_text, callback_data=f"send_token_{sym}")])
-#    reply_markup = InlineKeyboardMarkup(keyboard)
-#    await update.message.reply_text("Выберите токен для отправки:", reply_markup=reply_markup)
-#    logger.info("User %s инициировал перевод. Доступные токены: %s", user_id, list(available_tokens.keys()))
-#    return SEND_SELECT_TOKEN
-
 async def send_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     tokens = await get_all_user_tokens(user_id)
@@ -341,20 +273,6 @@ async def send_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("User %s инициировал перевод. Доступные токены: %s", user_id, list(available_tokens.keys()))
     return SEND_SELECT_TOKEN
     
-#async def send_token_select_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#    query = update.callback_query
-#    await query.answer()
-#    token_symbol = query.data.split("_")[-1]
-#    available_tokens = context.user_data.get("available_tokens")
-#    if not available_tokens or token_symbol not in available_tokens:
-#        await query.edit_message_text("Ошибка: выбран неверный токен.")
-#        return ConversationHandler.END
-#    context.user_data["selected_token"] = available_tokens[token_symbol]
-#    context.user_data["selected_token_symbol"] = token_symbol
-#    logger.info("User %s выбрал токен %s для отправки", query.from_user.id, token_symbol)
-#    await query.edit_message_text(f"Вы выбрали {token_symbol} ({available_tokens[token_symbol]['name']}).\nВведите адрес получателя:")
-#    return SEND_ENTER_ADDRESS
-
 async def send_token_select_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -376,33 +294,6 @@ async def send_enter_address(update: Update, context: ContextTypes.DEFAULT_TYPE)
     logger.info("User %s ввёл адрес получателя: %s", update.effective_user.id, recipient_address)
     await update.message.reply_text("Введите количество для отправки:")
     return SEND_ENTER_AMOUNT
-
-#async def send_enter_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#    try:
-#        amount = float(update.message.text.strip())
-#    except ValueError:
-#        await update.message.reply_text("Неверное значение. Введите число:")
-#        return SEND_ENTER_AMOUNT
-#    selected_token = context.user_data.get("selected_token")
-#    if amount > selected_token["amount"]:
-#        await update.message.reply_text("Ошибка: указанное количество превышает баланс. Введите корректное значение:")
-#        return SEND_ENTER_AMOUNT
-#    context.user_data["send_amount"] = amount
-#    token_symbol = context.user_data.get("selected_token_symbol")
-#    token_name = selected_token["name"]
-#    token_contract = selected_token["contract"] if selected_token["contract"] else "TON"
-#    recipient_address = context.user_data.get("recipient_address")
-#    confirmation_text = (f"Подтвердите отправку:\n"
-#                         f"Токен: {token_symbol} ({token_name})\n"
-#                         f"Контракт: {token_contract}\n"
-#                         f"Количество: {amount}\n"
-#                         f"Получатель: {recipient_address}")
-#    keyboard = [[InlineKeyboardButton("Да", callback_data="send_confirm_yes"),
-#                 InlineKeyboardButton("Нет", callback_data="send_confirm_no")]]
-#    reply_markup = InlineKeyboardMarkup(keyboard)
-#    await update.message.reply_text(confirmation_text, reply_markup=reply_markup)
-#    logger.info("User %s запросил отправку %s %s на адрес %s", update.effective_user.id, amount, token_symbol, recipient_address)
-#    return SEND_CONFIRM
 
 async def send_enter_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -485,188 +376,11 @@ async def send_confirm_callback(update: Update, context: ContextTypes.DEFAULT_TY
         logger.error("Ошибка при отправке токена для пользователя %s: %s", user_id, e)
         await query.edit_message_text("Ошибка при отправке токенов. Попробуйте позже.")
     return ConversationHandler.END
-    
-#async def send_confirm_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#    query = update.callback_query
-#    await query.answer()
-#    user_id = query.from_user.id
-#    if query.data == "send_confirm_no":
-#        await query.edit_message_text("Отправка отменена.")
-#        logger.info("User %s отменил отправку токена.", user_id)
-#        return ConversationHandler.END
-#    recipient_address = context.user_data.get("recipient_address")
-#    amount = context.user_data.get("send_amount")
-#    selected_token = context.user_data.get("selected_token")
-#    token_symbol = context.user_data.get("selected_token_symbol")
-#    wallet_data = get_wallet_by_user(user_id)
-#    if not wallet_data:
-#        await query.edit_message_text("Сначала создайте кошелек командой /start.")
-#        return ConversationHandler.END
-#    # Дешифруем мнемонику – получаем список слов для использования в from_mnemonic
-#    mnemonic = decrypt_text(wallet_data[1])
-#    from tonutils.client import TonapiClient
-#    from tonutils.wallet import WalletV4R2
-#    API_KEY = os.getenv("API_KEY")
-#    IS_TESTNET = os.getenv("IS_TESTNET") == "True"
-#    client = TonapiClient(api_key=API_KEY, is_testnet=IS_TESTNET)
-#    try:
-#        wallet, public_key, private_key, _ = WalletV4R2.from_mnemonic(client, mnemonic)
-#        base_amount = int(amount * (10 ** 9))
-#        if token_symbol == "TON":
-#            tx_hash = await wallet.transfer(
-#                destination=recipient_address,
-#                amount=base_amount,
-#                body="TonTrade",
-#            )
-#        else:
-#            tx_hash = await wallet.transfer_jetton(
-#                destination=recipient_address,
-#                jetton_master_address=selected_token["contract"],
-#                jetton_amount=base_amount,
-#                jetton_decimals=9,
-#                forward_payload="TonTrade",
-#            )
-#        await query.edit_message_text(f"Успешно переведено {amount} {token_symbol}!\nTransaction hash: {tx_hash}")
-#        logger.info("User %s успешно перевёл %s %s на %s. Tx hash: %s", user_id, amount, token_symbol, recipient_address, tx_hash)
-#    except Exception as e:
-#        logger.error("Ошибка при отправке токена для пользователя %s: %s", user_id, e)
-#        await query.edit_message_text("Ошибка при отправке токенов. Попробуйте позже.")
-#    return ConversationHandler.END
-    
+        
 async def send_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Отправка отменена.", reply_markup=get_main_menu_keyboard())
     logger.info("User %s отменил выполнение команды /send.", update.effective_user.id)
     return ConversationHandler.END
-
-# --- Команда /swap (ConversationHandler) ---
-#async def swap_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#    user_id = update.effective_user.id
-#    tokens = await get_all_user_tokens(user_id)
-#    if tokens is None:
-#        await update.message.reply_text("Ошибка получения данных кошелька.")
-#        return ConversationHandler.END
-#    available_from = {sym: token for sym, token in tokens.items() if token["amount"] > 0}
-#    if not available_from:
-#        await update.message.reply_text("Баланс всех токенов вашего кошелька = 0, вначале пополните баланс")
-#        return ConversationHandler.END
-#    context.user_data["available_from"] = available_from
-#    keyboard = []
-#    for sym, token in available_from.items():
-#        button_text = f"{sym} ({token['name']})"
-#        keyboard.append([InlineKeyboardButton(button_text, callback_data=f"swap_from_{sym}")])
-#    reply_markup = InlineKeyboardMarkup(keyboard)
-#    await update.message.reply_text("Выберите токен для обмена (отдаете):", reply_markup=reply_markup)
-#    logger.info("User %s инициировал обмен. Исходные токены: %s", user_id, list(available_from.keys()))
-#    return SWAP_SELECT_FROM
-
-#async def swap_from_select_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#    query = update.callback_query
-#    await query.answer()
-#    token_symbol = query.data.split("_")[-1]
-#    available_from = context.user_data.get("available_from")
-#    if not available_from or token_symbol not in available_from:
-#        await query.edit_message_text("Ошибка: выбран неверный токен.")
-#        return ConversationHandler.END
-#    context.user_data["swap_from"] = available_from[token_symbol]
-#    context.user_data["swap_from_symbol"] = token_symbol
-#    user_id = query.from_user.id
-#    tokens = await get_all_user_tokens(user_id)
-#    keyboard = []
-#    for sym, token in tokens.items():
-#        if sym == token_symbol:
-#            continue
-#        button_text = f"{sym} ({token['name']})"
-#        keyboard.append([InlineKeyboardButton(button_text, callback_data=f"swap_to_{sym}")])
-#    keyboard.append([InlineKeyboardButton("Другой токен", callback_data="swap_to_other")])
-#    reply_markup = InlineKeyboardMarkup(keyboard)
-#    await query.edit_message_text("На что хотите обменять? Выберите токен:", reply_markup=reply_markup)
-#    logger.info("User %s выбрал исходный токен для обмена: %s", user_id, token_symbol)
-#    return SWAP_SELECT_TO
-
-#async def swap_to_select_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#    query = update.callback_query
-#    await query.answer()
-#    if query.data == "swap_to_other":
-#        await query.edit_message_text("Чтобы добавить новый токен, введите команду /add. После добавления повторите выбор токена для обмена.")
-#        return ConversationHandler.END
-#    token_symbol = query.data.split("_")[-1]
-#    user_id = query.from_user.id
-#    tokens = await get_all_user_tokens(user_id)
-#    if token_symbol not in tokens:
-#        await query.edit_message_text("Ошибка: выбран неверный токен для обмена.")
-#        return ConversationHandler.END
-#    context.user_data["swap_to"] = tokens[token_symbol]
-#    context.user_data["swap_to_symbol"] = token_symbol
-#    await query.edit_message_text(f"Вы выбрали обменять на {token_symbol} ({tokens[token_symbol]['name']}).\nВведите количество для обмена:")
-#    logger.info("User %s выбрал целевой токен для обмена: %s", user_id, token_symbol)
-#    return SWAP_ENTER_AMOUNT
-
-#async def swap_enter_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#    try:
-#        amount = float(update.message.text.strip())
-#    except ValueError:
-#        await update.message.reply_text("Неверное значение. Введите число:")
-#        return SWAP_ENTER_AMOUNT
-#    swap_from = context.user_data.get("swap_from")
-#    if amount > swap_from["amount"]:
-#        await update.message.reply_text("Ошибка: указанное количество превышает баланс исходного токена. Введите корректное значение:")
-#        return SWAP_ENTER_AMOUNT
-#    context.user_data["swap_amount"] = amount
-#    from_sym = context.user_data.get("swap_from_symbol")
-#    to_sym = context.user_data.get("swap_to_symbol")
-#    from_token = swap_from
-#    to_token = context.user_data.get("swap_to")
-#    confirmation_text = (f"Подтвердите обмен:\n"
-#                         f"Отдаете: {amount} {from_sym} ({from_token['name']})\n"
-#                         f"Получаете: {amount} {to_sym} ({to_token['name']})\n"
-#                         f"Контракты: {from_token['contract'] or 'TON'} → {to_token['contract'] or 'TON'}")
-#    keyboard = [[InlineKeyboardButton("Да", callback_data="swap_confirm_yes"),
-#                 InlineKeyboardButton("Нет", callback_data="swap_confirm_no")]]
-#    reply_markup = InlineKeyboardMarkup(keyboard)
-#    await update.message.reply_text(confirmation_text, reply_markup=reply_markup)
-#    logger.info("User %s запросил обмен %s %s на %s", update.effective_user.id, amount, from_sym, to_sym)
-#    return SWAP_CONFIRM
-    
-#async def swap_confirm_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#    query = update.callback_query
-#    await query.answer()
-#    user_id = query.from_user.id
-#    if query.data == "swap_confirm_no":
-#        await query.edit_message_text("Обмен отменен.")
-#        logger.info("User %s отменил обмен токенов.", user_id)
-#        return ConversationHandler.END
-#    wallet_data = get_wallet_by_user(user_id)
-#    if not wallet_data:
-#        await query.edit_message_text("Сначала создайте кошелек командой /start.")
-#        return ConversationHandler.END
-#    mnemonic = decrypt_text(wallet_data[1])
-#    amount = context.user_data.get("swap_amount")
-#    from_sym = context.user_data.get("swap_from_symbol")
-#    to_sym = context.user_data.get("swap_to_symbol")
-#    from_token = context.user_data.get("swap_from")
-#    to_token = context.user_data.get("swap_to")
-#    tx_hash = None
-#    try:
-#        if from_sym == "TON" and to_sym != "TON":
-#            logger.info("Выполняется обмен TON -> Jetton")
-#            tx_hash = await swap_ton_to_jetton(mnemonic, amount, to_token["contract"])
-#        elif from_sym != "TON" and to_sym == "TON":
-#            logger.info("Выполняется обмен Jetton -> TON")
-#            tx_hash = await swap_jetton_to_ton(mnemonic, amount, from_token["contract"])
-#        elif from_sym != "TON" and to_sym != "TON":
-#            logger.info("Выполняется обмен Jetton -> Jetton")
-#            tx_hash = await swap_jetton_to_jetton(mnemonic, amount, from_token["contract"], to_token["contract"])
-#        else:
-#            await query.edit_message_text("Обмен данного типа токенов не поддерживается.")
-#            return ConversationHandler.END
-#        await query.edit_message_text(f"Обмен выполнен успешно!\nTransaction hash: {tx_hash}")
-#        logger.info("User %s успешно обменял %s %s на %s. Tx hash: %s", user_id, amount, from_sym, to_sym, tx_hash)
-#    except Exception as e:
-#        logger.error("Ошибка при обмене для пользователя %s: %s", user_id, e)
-#        await query.edit_message_text("Ошибка при обмене токенов. Попробуйте позже.")
-#    return ConversationHandler.END
-
-# --- Команда /swap (ConversationHandler) --- 
 
 async def swap_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
